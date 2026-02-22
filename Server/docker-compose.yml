@@ -109,7 +109,7 @@ services:
       minio-init:
         condition: service_completed_successfully
     ports:
-      - 8080:8080
+      - 18080:8080
       - 8081:8081
       - 8082:8082
       - 8443:8443
@@ -118,7 +118,8 @@ services:
       - 8092:8092
       - 10000-10500:10000-10500 # for dynamic websocket servers
     healthcheck:
-      test: ['CMD-SHELL', 'node -e "const net = require(\"net\"); const client = net.createConnection(8080, \"127.0.0.1\", () => { client.end(); process.exit(0); }); client.on(\"error\", () => process.exit(1)); client.setTimeout(5000, () => { client.destroy(); process.exit(1); });"']
+      # container listens on 8080; host maps to 18080
+      test: ['CMD-SHELL', 'node -e "const net = require(\\"net\\"); const client = net.createConnection(8080, \\"127.0.0.1\\", () => { client.end(); process.exit(0); }); client.on(\\"error\\", () => process.exit(1)); client.setTimeout(5000, () => { client.destroy(); process.exit(1); });"']
       interval: 30s
       timeout: 10s
       retries: 5
@@ -167,7 +168,7 @@ services:
     volumes:
       - ./hasura-metadata:/hasura-metadata
     ports:
-      - 8090:8080
+      - 19090:8080
     restart: always
     depends_on:
       citrine:
