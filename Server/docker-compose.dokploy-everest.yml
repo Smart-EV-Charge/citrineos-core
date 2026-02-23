@@ -20,7 +20,7 @@ services:
     depends_on:
       - mqtt-server
     environment:
-      - MQTT_SERVER_ADDRESS=mqtt-server
+      - MQTT_SERVER_ADDRESS=${EVEREST_MQTT_SERVER_ADDRESS:-mqtt-server}
       - EVEREST_TARGET_URL=${EVEREST_TARGET_URL}
       - OCPP_VERSION=${OCPP_VERSION:-two}
     sysctls:
@@ -37,8 +37,8 @@ services:
     depends_on:
       - mqtt-server
     environment:
-      - MQTT_SERVER_ADDRESS=mqtt-server
-      - FLOWS=/config/config-sil-two-evse-flow.json
+      - MQTT_SERVER_ADDRESS=${EVEREST_MQTT_SERVER_ADDRESS:-mqtt-server}
+      - FLOWS=${EVEREST_NODERED_FLOWS:-/config/config-sil-two-evse-flow.json}
     expose:
       - "1880"
     networks:
