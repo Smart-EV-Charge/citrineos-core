@@ -21,6 +21,16 @@ http-server /tmp/everest_ocpp_logs -p 8888 &
 if [ "$OCPP_VERSION" = "one" ]; then
     chmod +x /ext/build/run-scripts/run-sil-ocpp.sh
     sed -i "0,/127.0.0.1:8180\/steve\/websocket\/CentralSystemService\// s|127.0.0.1:8180/steve/websocket/CentralSystemService/|${EVEREST_TARGET_URL}|" /ext/dist/share/everest/modules/OCPP/config-docker.json
+    if [ -n "$EVEREST_TARGET_URL" ]; then
+        case "$EVEREST_TARGET_URL" in
+            wss://*)
+                sed -i 's/"SecurityProfile": [0-9]\+/"SecurityProfile": 2/' /ext/dist/share/everest/modules/OCPP/config-docker.json
+                ;;
+            ws://*)
+                sed -i 's/"SecurityProfile": [0-9]\+/"SecurityProfile": 1/' /ext/dist/share/everest/modules/OCPP/config-docker.json
+                ;;
+        esac
+    fi
     if [ "$EVEREST_DISABLE_ISO15118" = "true" ]; then
         awk '
         BEGIN { skip_module = 0; skip_hlc = 0 }
