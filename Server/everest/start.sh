@@ -21,7 +21,39 @@ http-server /tmp/everest_ocpp_logs -p 8888 &
 if [ "$OCPP_VERSION" = "one" ]; then
     chmod +x /ext/build/run-scripts/run-sil-ocpp.sh
     sed -i "0,/127.0.0.1:8180\/steve\/websocket\/CentralSystemService\// s|127.0.0.1:8180/steve/websocket/CentralSystemService/|${EVEREST_TARGET_URL}|" /ext/dist/share/everest/modules/OCPP/config-docker.json
-    /ext/build/run-scripts/run-sil-ocpp.sh
+    if [ "$EVEREST_DISABLE_ISO15118" = "true" ]; then
+        awk '
+        BEGIN { skip = 0 }
+        {
+            if ($0 ~ /^  iso15118_charger:/ || $0 ~ /^  iso15118_car:/) {
+                skip = 1
+                next
+            }
+
+            if (skip == 1) {
+                if ($0 ~ /^  [A-Za-z0-9_]+:/) {
+                    skip = 0
+                } else {
+                    next
+                }
+            }
+
+            if ($0 ~ /module_id: iso15118_charger/ || $0 ~ /module_id: iso15118_car/) {
+                next
+            }
+
+            print
+        }
+        ' /ext/source/config/config-sil-ocpp.yaml > /tmp/config-sil-ocpp-noiso15118.yaml
+
+        LD_LIBRARY_PATH=/ext/dist/lib:$LD_LIBRARY_PATH \
+        PATH=/ext/dist/bin:$PATH \
+        manager \
+            --prefix /ext/dist \
+            --conf /tmp/config-sil-ocpp-noiso15118.yaml
+    else
+        /ext/build/run-scripts/run-sil-ocpp.sh
+    fi
 else
     rm /ext/dist/share/everest/modules/OCPP201/component_config/custom/EVSE_2.json
     rm /ext/dist/share/everest/modules/OCPP201/component_config/custom/Connector_2_1.json
