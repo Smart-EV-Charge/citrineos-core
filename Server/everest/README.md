@@ -26,6 +26,15 @@ You will notice that there are two args that are configurable:
 
 - `EVEREST_IMAGE_TAG` - The image tag that will be used for the EVerest image (ghcr.io/everest/everest-demo/manager).
 - `EVEREST_TARGET_URL` - The CSMS URL that EVerest will connect to. Defaults to `host.docker.internal` assuming CitrineOS will run on same machine, since `localhost` won't work within Docker.
+- `EVEREST_CHARGE_POINT_ID` - Charge point identity used by EVerest. Defaults to `cp001`.
+
+### URL and Charge Point ID rules
+
+- OCPP 2.0.1 (`OCPP_VERSION=two`): set `EVEREST_TARGET_URL` to the CSMS base URL, and set station identity via `EVEREST_CHARGE_POINT_ID`.
+  - Example: `EVEREST_TARGET_URL=wss://ocpp.rangoru.com` and `EVEREST_CHARGE_POINT_ID=cp002`
+- OCPP 1.6 (`OCPP_VERSION=one`):
+  - Legacy mode: set a full target URL in `EVEREST_TARGET_URL` (including station path) and omit `EVEREST_CHARGE_POINT_ID`.
+  - Unified mode (recommended): set base URL in `EVEREST_TARGET_URL` and set `EVEREST_CHARGE_POINT_ID`; startup will append `/<chargePointId>` automatically.
 
 After running `npm run start-everest` (or the Windows alternative), you should see 3 running EVerest containers
 and the `manager` container should have the appropriate EVerest logs.

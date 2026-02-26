@@ -3,6 +3,13 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+CHARGE_POINT_ID="${EVEREST_CHARGE_POINT_ID:-cp001}"
+CHARGE_POINT_ID_EXPLICIT="false"
+
+if [ -n "$EVEREST_CHARGE_POINT_ID" ]; then
+    CHARGE_POINT_ID_EXPLICIT="true"
+fi
+
 if [ "$OCPP_VERSION" = "two" ]; then
     apt-get update && apt-get install -y sqlite3
     sqlite3 /ext/dist/share/everest/modules/OCPP201/device_model_storage.db \
@@ -13,16 +20,37 @@ if [ "$OCPP_VERSION" = "two" ]; then
             SELECT id FROM VARIABLE \
             WHERE name = 'NetworkConnectionProfiles' \
             );"
+    sqlite3 /ext/dist/share/everest/modules/OCPP201/device_model_storage.db \
+            "UPDATE VARIABLE_ATTRIBUTE \
+            SET value = '$CHARGE_POINT_ID' \
+            WHERE \
+            variable_Id IN ( \
+            SELECT id FROM VARIABLE \
+            WHERE name = 'ChargePointId' \
+            );"
 fi
 
 /entrypoint.sh
 http-server /tmp/everest_ocpp_logs -p 8888 &
 
 if [ "$OCPP_VERSION" = "one" ]; then
+    TARGET_URL_ONE_SIX="$EVEREST_TARGET_URL"
+
+    if [ -n "$TARGET_URL_ONE_SIX" ] && [ "$CHARGE_POINT_ID_EXPLICIT" = "true" ]; then
+        TARGET_URL_ONE_SIX="${TARGET_URL_ONE_SIX%/}"
+        case "$TARGET_URL_ONE_SIX" in
+            */"$CHARGE_POINT_ID")
+                ;;
+            *)
+                TARGET_URL_ONE_SIX="${TARGET_URL_ONE_SIX}/${CHARGE_POINT_ID}"
+                ;;
+        esac
+    fi
+
     chmod +x /ext/build/run-scripts/run-sil-ocpp.sh
-    sed -i "0,/127.0.0.1:8180\/steve\/websocket\/CentralSystemService\// s|127.0.0.1:8180/steve/websocket/CentralSystemService/|${EVEREST_TARGET_URL}|" /ext/dist/share/everest/modules/OCPP/config-docker.json
-    if [ -n "$EVEREST_TARGET_URL" ]; then
-        case "$EVEREST_TARGET_URL" in
+    sed -i "0,/127.0.0.1:8180\/steve\/websocket\/CentralSystemService\// s|127.0.0.1:8180/steve/websocket/CentralSystemService/|${TARGET_URL_ONE_SIX}|" /ext/dist/share/everest/modules/OCPP/config-docker.json
+    if [ -n "$TARGET_URL_ONE_SIX" ]; then
+        case "$TARGET_URL_ONE_SIX" in
             wss://*)
                 sed -i 's/"SecurityProfile": [0-9]\+/"SecurityProfile": 2/' /ext/dist/share/everest/modules/OCPP/config-docker.json
                 ;;

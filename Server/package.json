@@ -20,10 +20,10 @@
     "start-docker": "nodemon",
     "start-docker-cloud": "node --inspect=0.0.0.0:9229 ./dist/index.js",
     "start-everest": "cd ./everest && cross-env OCPP_VERSION=two EVEREST_IMAGE_TAG=0.0.23 docker compose up -d",
-    "start-everest-ws": "cd ./everest && cross-env OCPP_VERSION=two EVEREST_IMAGE_TAG=0.0.23 EVEREST_TARGET_URL=ws://host.docker.internal:8081/cp001 docker compose up -d",
-    "start-everest-wss": "cd ./everest && cross-env OCPP_VERSION=two EVEREST_IMAGE_TAG=0.0.23 EVEREST_TARGET_URL=wss://ocpp.rangoru.com/cp001 docker compose up -d",
+    "start-everest-ws": "cd ./everest && cross-env OCPP_VERSION=two EVEREST_IMAGE_TAG=0.0.23 EVEREST_TARGET_URL=ws://host.docker.internal:8081 EVEREST_CHARGE_POINT_ID=cp001 docker compose up -d",
+    "start-everest-wss": "cd ./everest && cross-env OCPP_VERSION=two EVEREST_IMAGE_TAG=0.0.23 EVEREST_TARGET_URL=wss://ocpp.rangoru.com EVEREST_CHARGE_POINT_ID=cp001 docker compose up -d",
     "start-everest-16": "cd ./everest && cross-env OCPP_VERSION=one EVEREST_IMAGE_TAG=0.0.23 docker compose up -d",
-    "start-everest-16-ws": "cd ./everest && cross-env OCPP_VERSION=one EVEREST_IMAGE_TAG=0.0.23 EVEREST_TARGET_URL=ws://host.docker.internal:8092/ docker compose up -d"
+    "start-everest-16-ws": "cd ./everest && cross-env OCPP_VERSION=one EVEREST_IMAGE_TAG=0.0.23 EVEREST_TARGET_URL=ws://host.docker.internal:8092 EVEREST_CHARGE_POINT_ID=cp001 docker compose up -d"
   },
   "keywords": [
     "ocpp",
