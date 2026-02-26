@@ -10,26 +10,6 @@ if [ -n "$EVEREST_CHARGE_POINT_ID" ]; then
     CHARGE_POINT_ID_EXPLICIT="true"
 fi
 
-if [ "$OCPP_VERSION" = "two" ]; then
-    apt-get update && apt-get install -y sqlite3
-    sqlite3 /ext/dist/share/everest/modules/OCPP201/device_model_storage.db \
-            "UPDATE VARIABLE_ATTRIBUTE \
-            SET value = '[{\"configurationSlot\": 1, \"connectionData\": {\"messageTimeout\": 30, \"ocppCsmsUrl\": \"$EVEREST_TARGET_URL\", \"ocppInterface\": \"Wired0\", \"ocppTransport\": \"JSON\", \"ocppVersion\": \"OCPP20\", \"securityProfile\": 1}},{\"configurationSlot\": 2, \"connectionData\": {\"messageTimeout\": 30, \"ocppCsmsUrl\": \"$EVEREST_TARGET_URL\", \"ocppInterface\": \"Wired0\", \"ocppTransport\": \"JSON\", \"ocppVersion\": \"OCPP20\", \"securityProfile\": 1}}]' \
-            WHERE \
-            variable_Id IN ( \
-            SELECT id FROM VARIABLE \
-            WHERE name = 'NetworkConnectionProfiles' \
-            );"
-    sqlite3 /ext/dist/share/everest/modules/OCPP201/device_model_storage.db \
-            "UPDATE VARIABLE_ATTRIBUTE \
-            SET value = '$CHARGE_POINT_ID' \
-            WHERE \
-            variable_Id IN ( \
-            SELECT id FROM VARIABLE \
-            WHERE name = 'ChargePointId' \
-            );"
-fi
-
 /entrypoint.sh
 http-server /tmp/everest_ocpp_logs -p 8888 &
 
@@ -102,9 +82,42 @@ if [ "$OCPP_VERSION" = "one" ]; then
         /ext/build/run-scripts/run-sil-ocpp.sh
     fi
 else
-    rm /ext/dist/share/everest/modules/OCPP201/component_config/custom/EVSE_2.json
-    rm /ext/dist/share/everest/modules/OCPP201/component_config/custom/Connector_2_1.json
+    if ! command -v sqlite3 >/dev/null 2>&1; then
+        apt-get update && apt-get install -y sqlite3
+    fi
+
+    INTERNAL_CTRLR_CONFIG="/ext/dist/share/everest/modules/OCPP201/component_config/standardized/InternalCtrlr.json"
+    SECURITY_CTRLR_CONFIG="/ext/dist/share/everest/modules/OCPP201/component_config/standardized/SecurityCtrlr.json"
+
+    if [ -f "$INTERNAL_CTRLR_CONFIG" ]; then
+        sed -i "s/\"cp001\"/\"$CHARGE_POINT_ID\"/g" "$INTERNAL_CTRLR_CONFIG"
+    fi
+
+    if [ -f "$SECURITY_CTRLR_CONFIG" ]; then
+        sed -i "s/\"cp001\"/\"$CHARGE_POINT_ID\"/g" "$SECURITY_CTRLR_CONFIG"
+    fi
+
+    sqlite3 /ext/dist/share/everest/modules/OCPP201/device_model_storage.db \
+            "UPDATE VARIABLE_ATTRIBUTE \
+            SET value = '[{\"configurationSlot\": 1, \"connectionData\": {\"messageTimeout\": 30, \"ocppCsmsUrl\": \"$EVEREST_TARGET_URL\", \"ocppInterface\": \"Wired0\", \"ocppTransport\": \"JSON\", \"ocppVersion\": \"OCPP20\", \"securityProfile\": 1}},{\"configurationSlot\": 2, \"connectionData\": {\"messageTimeout\": 30, \"ocppCsmsUrl\": \"$EVEREST_TARGET_URL\", \"ocppInterface\": \"Wired0\", \"ocppTransport\": \"JSON\", \"ocppVersion\": \"OCPP20\", \"securityProfile\": 1}}]' \
+            WHERE \
+            variable_Id IN ( \
+            SELECT id FROM VARIABLE \
+            WHERE name = 'NetworkConnectionProfiles' \
+            );"
+
+    sqlite3 /ext/dist/share/everest/modules/OCPP201/device_model_storage.db \
+            "UPDATE VARIABLE_ATTRIBUTE \
+            SET value = '$CHARGE_POINT_ID' \
+            WHERE \
+            variable_Id IN ( \
+            SELECT id FROM VARIABLE \
+            WHERE name = 'ChargePointId' \
+            );"
+
     if [ "$EVEREST_ENABLE_PNC" = "true" ]; then
+        rm /ext/dist/share/everest/modules/OCPP201/component_config/custom/EVSE_2.json
+        rm /ext/dist/share/everest/modules/OCPP201/component_config/custom/Connector_2_1.json
         chmod +x /ext/build/run-scripts/run-sil-ocpp201-pnc.sh
         /ext/build/run-scripts/run-sil-ocpp201-pnc.sh
     else
