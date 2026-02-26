@@ -23,23 +23,32 @@ if [ "$OCPP_VERSION" = "one" ]; then
     sed -i "0,/127.0.0.1:8180\/steve\/websocket\/CentralSystemService\// s|127.0.0.1:8180/steve/websocket/CentralSystemService/|${EVEREST_TARGET_URL}|" /ext/dist/share/everest/modules/OCPP/config-docker.json
     if [ "$EVEREST_DISABLE_ISO15118" = "true" ]; then
         awk '
-        BEGIN { skip = 0 }
+        BEGIN { skip_module = 0; skip_hlc = 0 }
         {
             if ($0 ~ /^  iso15118_charger:/) {
-                skip = 1
+                skip_module = 1
                 next
             }
 
-            if (skip == 1) {
+            if (skip_module == 1) {
                 if ($0 ~ /^  [A-Za-z0-9_]+:/) {
-                    skip = 0
+                    skip_module = 0
                 } else {
                     next
                 }
             }
 
-            if ($0 ~ /module_id: iso15118_charger/) {
+            if ($0 ~ /^      hlc:/) {
+                skip_hlc = 1
                 next
+            }
+
+            if (skip_hlc == 1) {
+                if ($0 ~ /^      [A-Za-z0-9_]+:/ || $0 ~ /^  [A-Za-z0-9_]+:/) {
+                    skip_hlc = 0
+                } else {
+                    next
+                }
             }
 
             print
