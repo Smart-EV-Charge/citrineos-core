@@ -25,6 +25,11 @@ if [ "$OCPP_VERSION" = "one" ]; then
 else
     rm /ext/dist/share/everest/modules/OCPP201/component_config/custom/EVSE_2.json
     rm /ext/dist/share/everest/modules/OCPP201/component_config/custom/Connector_2_1.json
-    chmod +x /ext/build/run-scripts/run-sil-ocpp201-pnc.sh
-    /ext/build/run-scripts/run-sil-ocpp201-pnc.sh
+    if [ "$EVEREST_ENABLE_PNC" = "true" ]; then
+        chmod +x /ext/build/run-scripts/run-sil-ocpp201-pnc.sh
+        /ext/build/run-scripts/run-sil-ocpp201-pnc.sh
+    else
+        chmod +x /ext/build/run-scripts/run-sil-ocpp201.sh
+        /ext/build/run-scripts/run-sil-ocpp201.sh
+    fi
 fi
